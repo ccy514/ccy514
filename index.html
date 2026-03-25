@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>臺中愛滋指定醫事機構名冊</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root { --line-green: #06C755; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .header { background: var(--line-green); color: white; padding: 20px 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .search-box { width: 100%; padding: 12px; border-radius: 25px; border: none; outline: none; box-sizing: border-box; font-size: 16px; margin-top: 10px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+    .list-container { padding: 15px; }
+    .item-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: pointer; border-left: 5px solid transparent; transition: 0.2s; }
+    .item-card:active { transform: scale(0.98); background: #f9f9f9; }
+    .item-card.hospital { border-left-color: #007bff; }
+    .item-card.pharmacy { border-left-color: #ffc107; }
+    .info { flex: 1; }
+    .name { font-weight: bold; font-size: 17px; color: #333; margin-bottom: 4px; }
+    .addr { font-size: 13px; color: #777; line-height: 1.4; }
+    .map-icon { color: var(--line-green); font-size: 24px; margin-left: 10px; }
+    .no-result { text-align: center; color: #999; margin-top: 50px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div style="font-size: 20px; font-weight: bold;">🏥 臺中機關查詢</div>
+  <input type="text" id="searchInput" class="search-box" placeholder="輸入名稱或地址搜尋..." oninput="filterData()">
+</div>
+
+<div id="listContainer" class="list-container">
+  </div>
+
+<script>
+  // 完整的 19 筆資料
+  const rawData = [
+    { "name": "中國醫藥大學附設醫院(含兒童醫院)", "address": "臺中市北區育德路1號", "lat": 24.15728, "lng": 120.68052, "type": "hospital" },
+    { "name": "中山醫學大學附設醫院", "address": "臺中市南區建國北路一段110號", "lat": 24.12210, "lng": 120.65072, "type": "hospital" },
+    { "name": "臺中榮民總醫院", "address": "臺中市西屯區臺灣大道四段1650號", "lat": 24.18447, "lng": 120.60452, "type": "hospital" },
+    { "name": "澄清綜合醫院中港分院", "address": "臺中市西屯區台灣大道四段966號", "lat": 24.18290, "lng": 120.61693, "type": "hospital" },
+    { "name": "衛生福利部豐原醫院", "address": "臺中市豐原區安康路100號", "lat": 24.24259, "lng": 120.72529, "type": "hospital" },
+    { "name": "童綜合醫療社團法人童綜合醫院", "address": "臺中市梧棲區台灣大道八段699號", "lat": 24.24718, "lng": 120.54249, "type": "hospital" },
+    { "name": "衛生福利部臺中醫院", "address": "臺中市西區三民路一段199號", "lat": 24.14052, "lng": 120.67554, "type": "hospital" },
+    { "name": "佛教慈濟醫療財團法人台中慈濟醫院", "address": "臺中市潭子區豐興路1段88號", "lat": 24.19571, "lng": 120.72197, "type": "hospital" },
+    { "name": "林新醫療社團法人林新醫院", "address": "臺中市南屯區惠中路3段36號", "lat": 24.14931, "lng": 120.64030, "type": "hospital" },
+    { "name": "光田醫療社團法人光田綜合醫院(向上院區)", "address": "臺中市沙鹿區向上路7段127號", "lat": 24.20638, "lng": 120.56324, "type": "hospital" },
+    { "name": "光田醫療社團法人光田綜合醫院(大甲院區)", "address": "臺中市大甲區經國路321號", "lat": 24.34652, "lng": 120.61695, "type": "hospital" },
+    { "name": "仁愛醫療財團法人大里仁愛醫院", "address": "臺中市大里區東榮路483號", "lat": 24.10913, "lng": 120.68049, "type": "hospital" },
+    { "name": "心美日藥局", "address": "臺中市豐原區中山路359號1樓", "lat": 24.24929, "lng": 120.71498, "type": "pharmacy" },
+    { "name": "美日藥局", "address": "臺中市豐原區三民路188號1樓", "lat": 24.25336, "lng": 120.71814, "type": "pharmacy" },
+    { "name": "甲尚藥局", "address": "臺中市大甲區順天路129號", "lat": 24.34466, "lng": 120.62197, "type": "pharmacy" },
+    { "name": "原隆安藥局", "address": "臺中市石岡區萬安里石岡街53號", "lat": 24.27598, "lng": 120.77673, "type": "pharmacy" },
+    { "name": "睦林藥局", "address": "臺中市南屯區黎明路一段1155號", "lat": 24.14093, "lng": 120.63819, "type": "pharmacy" },
+    { "name": "澄光人文藥局", "address": "臺中市南屯區干城街305號", "lat": 24.15267, "lng": 120.63449, "type": "pharmacy" },
+    { "name": "德安藥局", "address": "臺中市南屯區文山里忠勇路115-6號1樓", "lat": 24.15290, "lng": 120.61623, "type": "pharmacy" }
+  ];
+
+  async function main() {
+    try {
+      await liff.init({ liffId: "你的LIFF_ID" }); // 記得替換 ID
+      render(rawData);
+    } catch (e) {
+      console.error("LIFF 初始化失敗");
+      render(rawData); // 離線測試用
+    }
+  }
+
+  function render(list) {
+    const container = document.getElementById('listContainer');
+    container.innerHTML = list.length ? '' : '<div class="no-result">找不到相關機關</div>';
+    list.forEach(item => {
+      const card = document.createElement('div');
+      card.className = `item-card ${item.type}`;
+      card.innerHTML = `
+        <div class="info">
+          <div class="name">${item.name}</div>
+          <div class="addr">${item.address}</div>
+        </div>
+        <div class="map-icon">📍</div>
+      `;
+      card.onclick = () => sendMap(item);
+      container.appendChild(card);
+    });
+  }
+
+  function filterData() {
+    const keyword = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = rawData.filter(item => 
+      item.name.toLowerCase().includes(keyword) || 
+      item.address.toLowerCase().includes(keyword)
+    );
+    render(filtered);
+  }
+
+  function sendMap(item) {
+    if (liff.isInClient()) {
+      liff.sendMessages([{
+        "type": "location",
+        "title": item.name,
+        "address": item.address,
+        "latitude": item.lat,
+        "longitude": item.lng
+      }]).then(() => liff.closeWindow());
+    } else {
+      // 網頁開發測試用：直接開 Google Map
+      window.open(`https://www.google.com/maps?q=${item.lat},${item.lng}`);
+    }
+  }
+
+  main();
+</script>
+
+</body>
+</html>
