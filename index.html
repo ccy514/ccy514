@@ -11,12 +11,33 @@
         .header { background: var(--line-green); color: white; padding: 20px 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .search-box { width: 100%; padding: 12px; border-radius: 25px; border: none; outline: none; box-sizing: border-box; font-size: 16px; margin-top: 10px; }
         .list-container { padding: 15px; }
-        .item-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border-left: 5px solid #007bff; }
-        .item-card:active { background: #eef; transform: scale(0.98); }
-        .info { flex: 1; }
+        
+        /* 調整卡片樣式，取消整張卡片的點擊特效 */
+        .item-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-left: 5px solid #007bff; }
+        
+        .info { flex: 1; padding-right: 10px; }
         .name { font-weight: bold; font-size: 17px; color: #333; margin-bottom: 4px; }
         .addr { font-size: 13px; color: #777; }
-        .map-icon { color: var(--line-green); font-size: 20px; font-weight: bold; margin-left: 10px; }
+        
+        /* 新增按鈕區塊與按鈕樣式 */
+        .actions { display: flex; gap: 10px; }
+        .action-btn { 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 20px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            border: 1px solid #eee;
+            background: #fafafa;
+        }
+        .action-btn.phone { color: #007bff; border-color: #cce0ff; background: #f0f5ff; }
+        .action-btn.map { color: var(--line-green); border-color: #c3e6cb; background: #d4edda; }
+        .action-btn:active { transform: scale(0.9); }
+        
         .no-result { text-align: center; color: #999; margin-top: 50px; }
     </style>
 </head>
@@ -28,34 +49,35 @@
 </div>
 
 <div id="listContainer" class="list-container">
-    </div>
+</div>
 
 <script>
+    // 在資料中加入了 phone 欄位，請將假電話替換為真實聯絡資訊
     const rawData = [
-        { "name": "中國醫藥大學附設醫院(含兒童醫院)", "address": "臺中市北區育德路1號", "lat": 24.15728, "lng": 120.68052 },
-        { "name": "中山醫學大學附設醫院", "address": "臺中市南區建國北路一段110號", "lat": 24.12210, "lng": 120.65072 },
-        { "name": "臺中榮民總醫院", "address": "臺中市西屯區臺灣大道四段1650號", "lat": 24.18447, "lng": 120.60452 },
-        { "name": "澄清綜合醫院中港分院", "address": "臺中市西屯區台灣大道四段966號", "lat": 24.18290, "lng": 120.61693 },
-        { "name": "衛生福利部豐原醫院", "address": "臺中市豐原區安康路100號", "lat": 24.24259, "lng": 120.72529 },
-        { "name": "童綜合醫療社團法人童綜合醫院", "address": "臺中市梧棲區台灣大道八段699號", "lat": 24.24718, "lng": 120.54249 },
-        { "name": "衛生福利部臺中醫院", "address": "臺中市西區三民路一段199號", "lat": 24.14052, "lng": 120.67554 },
-        { "name": "佛教慈濟醫療財團法人台中慈濟醫院", "address": "臺中市潭子區豐興路1段88號", "lat": 24.19571, "lng": 120.72197 },
-        { "name": "林新醫療社團法人林新醫院", "address": "臺中市南屯區惠中路3段36號", "lat": 24.14931, "lng": 120.64030 },
-        { "name": "光田醫療社團法人光田綜合醫院(向上院區)", "address": "臺中市沙鹿區向上路7段127號", "lat": 24.20638, "lng": 120.56324 },
-        { "name": "光田醫療社團法人光田綜合醫院(大甲院區)", "address": "臺中市大甲區經國路321號", "lat": 24.34652, "lng": 120.61695 },
-        { "name": "仁愛醫療財團法人大里仁愛醫院", "address": "臺中市大里區東榮路483號", "lat": 24.10913, "lng": 120.68049 },
-        { "name": "心美日藥局", "address": "臺中市豐原區中山路359號1樓", "lat": 24.24929, "lng": 120.71498 },
-        { "name": "美日藥局", "address": "臺中市豐原區三民路188號1樓", "lat": 24.25336, "lng": 120.71814 },
-        { "name": "甲尚藥局", "address": "臺中市大甲區順天路129號", "lat": 24.34466, "lng": 120.62197 },
-        { "name": "原隆安藥局", "address": "臺中市石岡區萬安里石岡街53號", "lat": 24.27598, "lng": 120.77673 },
-        { "name": "睦林藥局", "address": "臺中市南屯區黎明路一段1155號", "lat": 24.14093, "lng": 120.63819 },
-        { "name": "澄光人文藥局", "address": "臺中市南屯區干城街305號", "lat": 24.15267, "lng": 120.63449 },
-        { "name": "德安藥局", "address": "臺中市南屯區文山里忠勇路115-6號1樓", "lat": 24.15290, "lng": 120.61623 }
+        { "name": "中國醫藥大學附設醫院(含兒童醫院)", "address": "臺中市北區育德路1號", "lat": 24.15728, "lng": 120.68052, "phone": "0422052121" },
+        { "name": "中山醫學大學附設醫院", "address": "臺中市南區建國北路一段110號", "lat": 24.12210, "lng": 120.65072, "phone": "04-24739595" },
+        { "name": "臺中榮民總醫院", "address": "臺中市西屯區臺灣大道四段1650號", "lat": 24.18447, "lng": 120.60452, "phone": "04-23592525" },
+        { "name": "澄清綜合醫院中港分院", "address": "臺中市西屯區台灣大道四段966號", "lat": 24.18290, "lng": 120.61693, "phone": "04-24632000" },
+        { "name": "衛生福利部豐原醫院", "address": "臺中市豐原區安康路100號", "lat": 24.24259, "lng": 120.72529, "phone": "04-25271180" },
+        { "name": "童綜合醫療社團法人童綜合醫院", "address": "臺中市梧棲區台灣大道八段699號", "lat": 24.24718, "lng": 120.54249, "phone": "04-26581919" },
+        { "name": "衛生福利部臺中醫院", "address": "臺中市西區三民路一段199號", "lat": 24.14052, "lng": 120.67554, "phone": "04-22294411" },
+        { "name": "佛教慈濟醫療財團法人台中慈濟醫院", "address": "臺中市潭子區豐興路1段88號", "lat": 24.19571, "lng": 120.72197, "phone": "04-36060666" },
+        { "name": "林新醫療社團法人林新醫院", "address": "臺中市南屯區惠中路3段36號", "lat": 24.14931, "lng": 120.64030, "phone": "04-22586688" },
+        { "name": "光田醫療社團法人光田綜合醫院(向上院區)", "address": "臺中市沙鹿區向上路7段127號", "lat": 24.20638, "lng": 120.56324, "phone": "04-26625111" },
+        { "name": "光田醫療社團法人光田綜合醫院(大甲院區)", "address": "臺中市大甲區經國路321號", "lat": 24.34652, "lng": 120.61695, "phone": "04-26885599" },
+        { "name": "仁愛醫療財團法人大里仁愛醫院", "address": "臺中市大里區東榮路483號", "lat": 24.10913, "lng": 120.68049, "phone": "04-24819900" },
+        { "name": "心美日藥局", "address": "臺中市豐原區中山路359號1樓", "lat": 24.24929, "lng": 120.71498, "phone": "04-00000000" },
+        { "name": "美日藥局", "address": "臺中市豐原區三民路188號1樓", "lat": 24.25336, "lng": 120.71814, "phone": "04-00000000" },
+        { "name": "甲尚藥局", "address": "臺中市大甲區順天路129號", "lat": 24.34466, "lng": 120.62197, "phone": "04-00000000" },
+        { "name": "原隆安藥局", "address": "臺中市石岡區萬安里石岡街53號", "lat": 24.27598, "lng": 120.77673, "phone": "04-00000000" },
+        { "name": "睦林藥局", "address": "臺中市南屯區黎明路一段1155號", "lat": 24.14093, "lng": 120.63819, "phone": "04-00000000" },
+        { "name": "澄光人文藥局", "address": "臺中市南屯區干城街305號", "lat": 24.15267, "lng": 120.63449, "phone": "04-00000000" },
+        { "name": "德安藥局", "address": "臺中市南屯區文山里忠勇路115-6號1樓", "lat": 24.15290, "lng": 120.61623, "phone": "04-00000000" }
     ];
 
     async function main() {
         try {
-            // 請在此處填入你的正確 LIFF ID
+            // 請填入你的 LIFF ID
             await liff.init({ liffId: "2009558266-ODsa8gy2" }); 
             render(rawData);
         } catch (e) {
@@ -67,17 +89,21 @@
     function render(list) {
         const container = document.getElementById('listContainer');
         container.innerHTML = list.length ? '' : '<div class="no-result">找不到相關機關</div>';
+        
         list.forEach(item => {
             const card = document.createElement('div');
             card.className = 'item-card';
+            // 替換為兩顆按鈕：撥號與地圖
             card.innerHTML = `
                 <div class="info">
                     <div class="name">${item.name}</div>
                     <div class="addr">${item.address}</div>
                 </div>
-                <div class="map-icon">發送地圖 📍</div>
+                <div class="actions">
+                    <div class="action-btn phone" onclick="dialPhone('${item.phone}')" title="撥打電話">📞</div>
+                    <div class="action-btn map" onclick="openMap(${item.lat}, ${item.lng})" title="開啟地圖">📍</div>
+                </div>
             `;
-            card.onclick = () => sendMapLocation(item);
             container.appendChild(card);
         });
     }
@@ -91,27 +117,30 @@
         render(filtered);
     }
 
-    function sendMapLocation(item) {
-        if (!liff.isInClient()) {
-            // 若在一般瀏覽器測試，改為開啟 Google Map 網頁
-            window.open(`https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}`);
+    // 進行撥號
+    function dialPhone(phoneStr) {
+        if (!phoneStr || phoneStr.includes('00000000')) {
+            alert("目前尚無此機構的電話資料。");
             return;
         }
+        // 透過 tel: 協定喚起手機撥號器
+        window.location.href = `tel:${phoneStr}`;
+    }
 
-        // 發送地圖訊息
-        liff.sendMessages([{
-            "type": "location",
-            "title": item.name,
-            "address": item.address,
-            "latitude": item.lat,
-            "longitude": item.lng
-        }]).then(() => {
-            console.log("訊息發送成功");
-            liff.closeWindow(); // 傳送完畢後關閉 LIFF 視窗
-        }).catch((err) => {
-            alert("發送失敗，請確認是否已授權「傳送訊息」權限。");
-            console.error(err);
-        });
+    // 開啟簡易地圖 (Google Maps)
+    function openMap(lat, lng) {
+        // 使用 Google Maps 的搜尋 URL 格式來定位該座標
+        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        
+        // 使用 liff.openWindow 或原生的 window.open
+        if (liff.isInClient()) {
+            liff.openWindow({
+                url: mapUrl,
+                external: true // 在外部瀏覽器打開 (可避免 LIFF 視窗堆疊問題)
+            });
+        } else {
+            window.open(mapUrl, "_blank");
+        }
     }
 
     main();
