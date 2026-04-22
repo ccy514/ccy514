@@ -131,6 +131,7 @@
     function openMap(lat, lng, name) {
         // 使用 Google Maps 的搜尋 URL 格式來定位該座標
         // 使用 q=loc:lat,lng(名稱) 格式，Google Map 會在該點顯示大頭針並標註名稱
+        //使用 encodeURIComponent(name) 處理中文名稱，避免特殊字元導致網址失效
         // z=17 是縮放層級
         const mapUrl = `https://www.google.com/maps?q=loc:${lat},${lng}(${encodeURIComponent(name)})&z=17`;
         
