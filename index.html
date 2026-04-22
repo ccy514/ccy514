@@ -101,7 +101,7 @@
                 </div>
                 <div class="actions">
                     <div class="action-btn phone" onclick="dialPhone('${item.phone}')" title="撥打電話">📞</div>
-                    <div class="action-btn map" onclick="openMap(${item.lat}, ${item.lng})" title="開啟地圖">📍</div>
+                    <div class="action-btn map" onclick="openMap(${item.lat}, ${item.lng}, '${item.name}')" title="開啟地圖">📍</div>
                 </div>
             `;
             container.appendChild(card);
@@ -128,9 +128,11 @@
     }
 
     // 開啟簡易地圖 (Google Maps)
-    function openMap(lat, lng) {
+    function openMap(lat, lng, name) {
         // 使用 Google Maps 的搜尋 URL 格式來定位該座標
-        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        // 使用 q=loc:lat,lng(名稱) 格式，Google Map 會在該點顯示大頭針並標註名稱
+        // z=17 是縮放層級
+        const mapUrl = `https://www.google.com/maps?q=loc:${lat},${lng}(${encodeURIComponent(name)})&z=17`;
         
         // 使用 liff.openWindow 或原生的 window.open
         if (liff.isInClient()) {
